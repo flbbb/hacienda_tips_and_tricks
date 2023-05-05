@@ -260,6 +260,7 @@ srun python my_train_script.py
 ## Monitoring your jobs
 <details>
 <summary><b>Click to expand the section.</b></summary>
+
 - `squeue` will print all running jobs on the cluster.
 ```shell
 $ squeue
@@ -288,4 +289,5 @@ $ squeue -p hard
 ```
 
 -  `squeue -l` more info on the time limit (can be combined with any of the above example).
+
 </details>
