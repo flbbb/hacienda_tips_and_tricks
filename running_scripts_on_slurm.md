@@ -245,6 +245,13 @@ You only need to run:
 ```shell
 $ sbatch my_script.sh
 ```
+
+## Did it work?
+You just launched `sbatch my_script.sh`.
+
+All the script output is stored in the file that you supplied in `#SBATCH --output=my_output.out`.
+You can print the file content with `cat my_output.out`.
+
 ## Monitoring your jobs
 - `squeue` will print all running jobs on the cluster.
 ```shell
