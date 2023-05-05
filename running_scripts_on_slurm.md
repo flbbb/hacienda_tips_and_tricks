@@ -174,7 +174,7 @@ Just below is a an example sbatch script.
 #SBATCH --time=<d-h:m:s timelimit for the job>
 #SBATCH --output=<path/to/output_file>
 
-srun python my_script \
+srun python my_training_script.py \
     --n_layers 6 \
     --n_classes 5 \
     --dropout 0.1 \
@@ -183,8 +183,8 @@ srun python my_script \
 - Create a file `my_sript.sh` (or whatever name you want).
 - `#!/bin/bash` The name of the shell that is going to run the program.
 - `#SBATCH` the lines begining with `#SBATCH --<param>` specify parameters for slurm. There are many, below is an example for the most important ones. You can specify
-- Your script, just as you would launch it in the terminal.
--  You can break lines between arguments with ` \ `, as illustrated below (more readable).
+- `srun` + your instruction, just as you would launch it in the terminal. For example if you usually do `python my_training_script.py`, it becomes `srun python my_training_script.py`.
+-  You can break lines between arguments with ` \ `, as illustrated (more readable).
 
 **How to choose the GPUs?**
 The GPUs are organized into partition and nodes.
@@ -209,7 +209,7 @@ I want:
 #SBATCH --gpus=1
 #SBATCH --time=2:00:00
 #SBATCH --output=training_punk.out
-...
+srun python my_train_script.py
 ```
 
 I want:
@@ -223,7 +223,7 @@ I want:
 #SBATCH --gpus=2
 #SBATCH --time=1-5:00:00
 #SBATCH --output=training_led.out
-...
+srun python my_train_script.py
 ```
 
 I want:
@@ -237,7 +237,8 @@ I want:
 #SBATCH --gpus=3
 #SBATCH --time=8:00:00
 #SBATCH --output=training_thin_lizzy.out
-...
+srun python my_train_script.py
+```
 
 ## Launch a job
 You only need to run:
