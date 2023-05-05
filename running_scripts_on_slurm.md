@@ -163,7 +163,7 @@ To execute it on a GPU there are two ways.
 
 ### SBATCH
 
-Just below is a an example sbatch script.
+Just below is a an example sbatch script. Next section provides real examples.
 
 ```bash
 #!/bin/bash
@@ -191,7 +191,22 @@ The GPUs are organized into partition and nodes.
 A node contains several GPUs.
 A partition contains several nodes.
 
-You specify the ones you want using the SBATCH parameters as shown below.
+You specify the ones you want using the SBATCH parameters as shown above.
+
+## Launch a job
+You only need to run:
+```shell
+$ sbatch my_script.sh
+```
+
+## Did it work?
+You just launched `sbatch my_script.sh`.
+
+- Run `$ squeue -u $USER` you should see your name (not an empy list).
+
+All the script output is stored in the file that you supplied in `#SBATCH --output=my_output.out`.
+You can print the file content with `cat my_output.out`.
+
 </details>
 
 ## Hands-on examples
@@ -240,19 +255,11 @@ I want:
 srun python my_train_script.py
 ```
 
-## Launch a job
-You only need to run:
-```shell
-$ sbatch my_script.sh
-```
-
-## Did it work?
-You just launched `sbatch my_script.sh`.
-
-All the script output is stored in the file that you supplied in `#SBATCH --output=my_output.out`.
-You can print the file content with `cat my_output.out`.
+</details>
 
 ## Monitoring your jobs
+<details>
+<summary><b>Click to expand the section.</b></summary>
 - `squeue` will print all running jobs on the cluster.
 ```shell
 $ squeue
