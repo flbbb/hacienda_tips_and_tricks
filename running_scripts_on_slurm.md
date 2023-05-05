@@ -59,7 +59,7 @@ For that we can use `argparse` built-in library.
 
 `argparse` will give access to a `parser` that will read the arguments preceded by `-` or `--` when launching the script.
 
-For example, if I do `python my_script.py --learning_rate 0.001`, then the `parser` will read the attribute `learning_rate` set to 0.001.
+For example, if I do `python my_train_script.py --learning_rate 0.001`, then the `parser` will read the attribute `learning_rate` set to 0.001.
 
 **Advantages of `argparse`**
 - You can use the **same script for different hyperparameters**.
@@ -127,7 +127,7 @@ if __name__ == "__main__":
 Now you can just launch. Non-specified variables will be set to their default value.
 
 ```shell
-$ python my_script.py --n_layers 5 --batch_size 128
+$ python my_train_script.py --n_layers 5 --batch_size 128
 ```
 It modifies your hyperparameters efficiently and launch another experiment without touching your training scripts and hence limits errors.
 </details>
@@ -155,7 +155,7 @@ In practice, it means that people have to wait their turn to run a script on the
 <details>
 <summary><b>Click to expand the section.</b></summary>
 
-We suppose that you have a fully working python script `my_script.py`.
+We suppose that you have a fully working python script `my_train_script.py`.
 
 To execute it on a GPU there are two ways.
 - `sbatch` to launch the script in the background.
@@ -174,7 +174,7 @@ Just below is a an example sbatch script. Next section provides real examples.
 #SBATCH --time=<d-h:m:s timelimit for the job>
 #SBATCH --output=<path/to/output_file>
 
-srun python my_training_script.py \
+srun python my_train_script.py \
     --n_layers 6 \
     --n_classes 5 \
     --dropout 0.1 \
@@ -183,7 +183,7 @@ srun python my_training_script.py \
 - Create a file `my_sript.sh` (or whatever name you want).
 - `#!/bin/bash` The name of the shell that is going to run the program.
 - `#SBATCH` the lines begining with `#SBATCH --<param>` specify parameters for slurm. There are many, below is an example for the most important ones.
-- `srun` + your instruction, just as you would launch it in the terminal. For example if you usually do `python my_training_script.py`, it becomes `srun python my_training_script.py`.
+- `srun` + your instruction, just as you would launch it in the terminal. For example if you usually do `python my_train_script.py`, it becomes `srun python my_train_script.py`.
 -  You can break lines between arguments with ` \ `, as illustrated (more readable).
 
 **How to choose the GPUs?**
