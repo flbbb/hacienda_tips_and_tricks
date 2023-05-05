@@ -182,7 +182,7 @@ srun python my_training_script.py \
 ```
 - Create a file `my_sript.sh` (or whatever name you want).
 - `#!/bin/bash` The name of the shell that is going to run the program.
-- `#SBATCH` the lines begining with `#SBATCH --<param>` specify parameters for slurm. There are many, below is an example for the most important ones. You can specify
+- `#SBATCH` the lines begining with `#SBATCH --<param>` specify parameters for slurm. There are many, below is an example for the most important ones.
 - `srun` + your instruction, just as you would launch it in the terminal. For example if you usually do `python my_training_script.py`, it becomes `srun python my_training_script.py`.
 -  You can break lines between arguments with ` \ `, as illustrated (more readable).
 
