@@ -1,6 +1,6 @@
 # Good practises on distributed environment
 
-This file aims at giving some good practise advices on how to run python scripts on shared gpu clusters.
+This file aims at giving some good practice advices on how to run python scripts on shared gpu clusters.
 
 # Transform your python script
 TLDR: Replace any hardcoded variables by an input parameters with `argparse`.
@@ -10,29 +10,39 @@ Example of a common python script.
 <details>
 <summary><b>Click to expand the section.</b></summary>
 
-```python
-import torch, my_loss # for example purpose
-from models import model
-from data import load_data # for example purpose
+```python 
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+import torchvision
 
+def MyModel(nn.Module):
+    def __init__(self, d_model, n_classes):
+        self.linear = nn.Linear(d_model, n_classes)
+    
+    def forward(x):
+        x = x.flatten(start_dim=1)
+        logits = self.linear(x)
+        return logits
 
-my_model = model(
-    n_layers=12,
-    n_classes=5,
-    dropout=0.1,
+# MNIST is 28 * 28 and 10 classes.
+model = MyModel(d_model=28 * 28, n_classes=10)
+
+dataset = datasets.MNIST(
+    root='./data',
+    download=True,
+    transform=torchvision.transform.ToTensor()
 )
+dataloader = DataLoader(dataset, batch_size=32)
 
-dataset = load_data("/home/florianlb/data/my_dataset")
-dataloader = dataloader(dataset, batch_size=64, shuffle=True)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+loss_fn = nn.CrossEntropyLoss()
 
-
-optimizer = adam(model.parameters(), lr=1e-3)
 
 for epoch in range(10):
-    for batch in dataloader:
-        logits = model(x=batch["input"])
-        labels = batch["labels"]
-        loss = my_loss(y_pred=logits, y=labels)
+    for x, labels in dataloader:
+        logits = model(x)
+        loss = loss_fn(y_pred=logits, y=labels)
         loss.backward()
         optimizer.step()
         optimizer.zero_grad()
@@ -58,52 +68,64 @@ For example, if I do `python my_script.py --learning_rate 0.001`, then the `pars
 
 **Default values**
 As illustrated below, you can use default values that won't need to be supplied when launching the scripts.
-```python
-import torch
-from models import model
-from data import load_data
 
-# Here is the parser
+**`if __name__ == "__main__"`**
+This is a good practice tips. It executes the code beneath the conditional statement only if it has been launched from the command line.
+It is useful because you can now import your class `MyModel` into other files without executing all the code below.
+```python 
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+import torchvision
+
 from argparse import ArgumentParser
 
-parser = ArgumentParser()
-# Now just add all our aguments.
-# Do not forget to set the dtype, otherwise it will consided everything as a string.
-parser.add_argument("--n_layers", dtype=int, default=6)  # specify the dtype.
-parser.add_argument("--n_classes", dtype=int, default=5)
-parser.add_argument("--dropout", dtype=float, default=0.1)
-parser.add_argument("--n_epochs", dtype=int, default=10)
-parser.add_argument("--batch_size", dtype=int, default=64)
-parser.add_argument("--learning_rate", dtype=float, default=1e-3)
-parser.add_argument("--data_path", default="/home/florianlb/data/my_dataset") # do not specify the dtype since it's already a string.
+
+def MyModel(nn.Module):
+    def __init__(self, d_model, n_classes):
+        self.linear = nn.Linear(d_model, n_classes)
+    
+    def forward(x):
+        x = x.flatten(start_dim=1)
+        logits = self.linear(x)
+        return logits
 
 
-# Retrive the arguments from the command line.
-args = parser.parse_args()
+# __name__ == "__main__" checks if the script is called from the command line.
+if __name__ == "__main__":
+    parser = ArgumentParser()
+    # Now just add all our aguments.
+    # Do not forget to set the dtype, otherwise it will consided everything as a string.
+    parser.add_argument("--n_classes", type=int, default=5) # dtype and default value
+    parser.add_argument("--model_dim", type=int, default=784)
+    parser.add_argument("--n_epochs", type=int, default=10)
+    parser.add_argument("--batch_size", type=int, default=64)
+    parser.add_argument("--learning_rate", type=float, default=1e-3)
+    
+    model = MyModel(d_model=args.model_dim, n_classes=args.n_classes)
 
-my_model = model(
-    n_layers=args.n_layers,
-    n_classes=args.n_classes,
-    dropout=args.dropout,
-)
+    dataset = datasets.MNIST(
+        root='./data',
+        download=True,
+        transform=torchvision.transform.ToTensor()
+    )
+    dataloader = DataLoader(dataset, batch_size=args.batch_size)
 
-dataset = load_data(args.data_path)
-dataloader = dataloader(dataset, batch_size=args.batch_size, shuffle=True)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
+    loss_fn = nn.CrossEntropyLoss()
 
 
-optimizer = adam(model.parameters(), lr=args.learning_rate)
-
-for epoch in range(args.n_epochs):
-    for batch in dataloader:
-        logits = model(x=batch["input"])
-        labels = batch["labels"]
-        loss = my_loss(y_pred=logits, y=labels)
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+    for epoch in range(args.n_epochs):
+        for x, labels in dataloader:
+            logits = model(x)
+            loss = loss_fn(y_pred=logits, y=labels)
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
 ```
 
 Now you can just launch. Non-specified variables will be set to their default value.
+
 ```shell
 $ python my_script.py --n_layers 5 --batch_size 128
 ```
@@ -122,37 +144,54 @@ Using your script with SLURM.
 Slurm is an open-source job-scheduler.
 Basically, user can ask for resources on which to run their code and slurm dispatches the available resources to the users.
 
-It provides a smooth way to manage resources between uses.
+It provides a smooth way to manage resources between users.
 
 In practice, it means that people have to wait their turn to run a script on the GPU they target (if other people are already using it).
 
 </details>
 
-## Writing a `sbatch` script.
+## How can I launch my scripts on a GPU?
+
 <details>
 <summary><b>Click to expand the section.</b></summary>
 
-- Create a file `my_sript.sh` (or whatever name you want).
-- `#!/bin/bash` The name of the shell that is going to run the program.
-- `#SBATCH` the lines begining with `#SBATCH --<param>` specify parameters for slurm. There are many, below is an example for the most important ones.
-- Your script, just as you would launch it in the terminal.
--  You can break lines between arguments with ` \ `, as illustrated below (more readable).
+We suppose that you have a fully working python script `my_script.py`.
+
+To execute it on a GPU there are two ways.
+- `sbatch` to launch the script in the background.
+- `srun` where you connect to an environment that has access to the GPU and where you can launch your scripts interactively. Should be used mainly for debuging purposes.
+
+### SBATCH
+
+Just below is a an example sbatch script.
 
 ```bash
 #!/bin/bash
 #SBATCH --partition=<your target partition>
+#SBATCH --nodelist=<your target nodes>
+#SBATCH --gpus=<number of wanted gpus>
 #SBATCH --job-name=<your job name>
-#SBATCH --nodelist=<your target node>
-#SBATCH --nodes=<number of wanted node>
 #SBATCH --time=<d-h:m:s timelimit for the job>
 #SBATCH --output=<path/to/output_file>
 
-python my_script \
+srun python my_script \
     --n_layers 6 \
     --n_classes 5 \
     --dropout 0.1 \
     --n_epochs 10 
 ```
+- Create a file `my_sript.sh` (or whatever name you want).
+- `#!/bin/bash` The name of the shell that is going to run the program.
+- `#SBATCH` the lines begining with `#SBATCH --<param>` specify parameters for slurm. There are many, below is an example for the most important ones. You can specify
+- Your script, just as you would launch it in the terminal.
+-  You can break lines between arguments with ` \ `, as illustrated below (more readable).
+
+**How to choose the GPUs?**
+The GPUs are organized into partition and nodes.
+A node contains several GPUs.
+A partition contains several nodes.
+
+You specify the ones you want using the SBATCH parameters as shown below.
 </details>
 
 ## Hands-on examples
@@ -167,7 +206,7 @@ I want:
 #SBATCH --partition=electronic
 #SBATCH --job-name=training_model
 #SBATCH --nodelist=punk
-#SBATCH --nodes=1
+#SBATCH --gpus=1
 #SBATCH --time=2:00:00
 #SBATCH --output=training_punk.out
 ...
@@ -181,11 +220,24 @@ I want:
 #SBATCH --partition=hard
 #SBATCH --job-name=training_model
 #SBATCH --nodelist=led
-#SBATCH --nodes=2
+#SBATCH --gpus=2
 #SBATCH --time=1-5:00:00
-#SBATCH --output=training_hard.out
+#SBATCH --output=training_led.out
 ...
 ```
+
+I want:
+- 3 GPUs in total, on Thin and Lizzy
+- For 8h
+```bash
+#!/bin/bash
+#SBATCH --partition=hard
+#SBATCH --job-name=training_model
+#SBATCH --nodelist=thin,lizzy
+#SBATCH --gpus=3
+#SBATCH --time=8:00:00
+#SBATCH --output=training_thin_lizzy.out
+...
 
 ## Launch a job
 You only need to run:
